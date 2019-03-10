@@ -31,6 +31,7 @@ parser.add_argument("--nms_thres", type=float, default=0.4, help="iou thresshold
 parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
 parser.add_argument("--img_size", type=int, default=416, help="size of each image dimension")
 parser.add_argument("--checkpoint_interval", type=int, default=1, help="interval between saving model weights")
+parser.add_argument("--log_path", type=str, default="./default_log.txt", help="log path")
 parser.add_argument(
     "--checkpoint_dir", type=str, default="checkpoints", help="directory where model checkpoints are saved"
 )
@@ -75,6 +76,11 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
 
+print("Redirecting print to {}...".format(opt.log_path))
+log = open(opt.log_path, "w")
+sys.stdout = log
+sys.stderr = log
+
 for epoch in range(opt.epochs):
     for batch_i, (_, imgs, targets) in enumerate(dataloader):
         imgs = Variable(imgs.type(Tensor))
@@ -105,6 +111,8 @@ for epoch in range(opt.epochs):
                 model.losses["precision"],
             )
         )
+        
+        sys.stdout.flush()
 
         model.seen += imgs.size(0)
 
